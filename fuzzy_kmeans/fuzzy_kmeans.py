@@ -13,7 +13,6 @@
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import check_is_fitted
 
 class FuzzyKMeans(KMeans):
     """The class implements the fuzzy version of kmeans
@@ -64,7 +63,7 @@ class FuzzyKMeans(KMeans):
         distance_m = np.zeros((n_points, n_clusters))
 
         for i in range(n_clusters):
-            diff = X-centroids[i,:]
+            diff = data-centroids[i,:]
             distance_m[:,i] = np.sqrt((diff * diff).sum(axis=1))
 
         return distance_m
