@@ -13,6 +13,7 @@
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
+from sklearn.utils.validation import check_is_fitted
 
 class FuzzyKMeans(KMeans):
     """The class implements the fuzzy version of kmeans
@@ -25,7 +26,13 @@ class FuzzyKMeans(KMeans):
         self.__m = m
         self.__eps = eps
         self.fmm_ = None
+        self.__fitted = False
         super(FuzzyKMeans, self).__init__(*args, **kwargs)
+
+    # --------------------------------------------------------------------------
+
+    def __is_fitted(self):
+        return self.__fitted
 
     # --------------------------------------------------------------------------
 
@@ -105,7 +112,7 @@ class FuzzyKMeans(KMeans):
 
     # --------------------------------------------------------------------------
 
-    def compute_membership(self, data, centroids):
+    def _compute_membership(self, data, centroids):
         """The method computes the  membership matrix  of the data  according to
         the clusters specified by the given centroids
 
@@ -184,7 +191,7 @@ class FuzzyKMeans(KMeans):
         # ----------------------------------------------------------------------
         # Do the first iteration
         # ----------------------------------------------------------------------
-        fmm = self.compute_membership(X, centroids)
+        fmm = self._compute_membership(X, centroids)
         new_centroids = self.__update_centroids(X, fmm)
 
         while( not self.__converged(centroids, new_centroids)):
@@ -193,7 +200,7 @@ class FuzzyKMeans(KMeans):
             # compute the new fuzzy membership matrix, fmm; then, update the new
             # centroids.
             # ------------------------------------------------------------------
-            fmm = self.compute_membership(X, centroids)
+            fmm = self._compute_membership(X, centroids)
             new_centroids = self.__update_centroids(X, fmm)
 
         # ----------------------------------------------------------------------
@@ -202,6 +209,45 @@ class FuzzyKMeans(KMeans):
         self.cluster_centers_ = new_centroids
         self.labels_ = fmm.argmax(axis=1)
         self.fmm_ = fmm
+
+        self.__fitted = True
+
         return self
+
+    # --------------------------------------------------------------------------
+
+    def compute_membership(self, data):
+        """The method computes  the membership matrix  of the data  according to
+        the fitted points.
+
+        Inputs:
+            - data: the input data points being clustered
+
+        Outputs:
+            - fmm: fuzzy membership matrix of each data point"""
+
+        if not self.__is_fitted():
+            raise RuntimeError("You did not fit the estimator yet.")
+
+        return self._compute_membership(X, self.cluster_centers_)
+
+    # --------------------------------------------------------------------------
+
+    def predict(self, X, sample_weight=None):
+        """The method  clusters each data point according to a previously fitted
+        data."""
+
+        if not self.__is_fitted():
+            raise RuntimeError("You did not fit the estimator yet.")
+
+        X = self._check_test_data(X)
+
+        return self.compute_membership(X).argmax(axis=1)
+
+    # --------------------------------------------------------------------------
+
+    def score(self, X, y=None, sample_weight=None):
+        """Not supported by this implementation"""
+        pass
 
     # --------------------------------------------------------------------------
