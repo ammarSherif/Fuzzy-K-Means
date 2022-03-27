@@ -2,6 +2,7 @@
 
 # ==============================================================================
 # Author: Ammar Sherif <ammarsherif90 [at] gmail [dot] com >
+# License: MIT
 # ==============================================================================
 
 # ==============================================================================
@@ -23,6 +24,7 @@ class FuzzyKMeans(KMeans):
     def __init__(self, m, eps= 0.001,*args, **kwargs):
         self.__m = m
         self.__eps = eps
+        self.fmm_ = None
         super(FuzzyKMeans, self).__init__(*args, **kwargs)
 
     # --------------------------------------------------------------------------
@@ -62,6 +64,47 @@ class FuzzyKMeans(KMeans):
 
     # --------------------------------------------------------------------------
 
+    def __update_centroids(self, data, fmm):
+        """The method computes the updated centroids according the the  computed
+        fuzzy membership matrix <fmm> of the previous centroids.
+        ------------------------------------------------------------------------
+
+        Inputs:
+            - data: the input data points
+            -  fmm: fuzzy membership matrix of each data point
+
+        Output:
+            - centroids: the newly computed centroids
+        """
+        # ----------------------------------------------------------------------
+        # We start computing the normalizing denominator terms
+        # ----------------------------------------------------------------------
+        norm = np.sum(fmm**self.__m,axis=0)
+
+        # ----------------------------------------------------------------------
+        # Initialize the new centroids with zeros
+        # ----------------------------------------------------------------------
+        n_clusters = fmm.shape[1]
+        n_features = data.shape[1]
+
+        new_centroids = np.zeros((n_clusters, n_features))
+        # ----------------------------------------------------------------------
+        # Loop computing each one
+        # ----------------------------------------------------------------------
+        for i in range(n_clusters):
+            # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            # Notice that we multiply the data points by the ith column of <fmm>
+            # which represent the probabities of being assigned to the ith clus-
+            # ter. After that, we sum all  the weighted points and average  them
+            # by dividing over the norm of that cluster.
+            # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            new_centroids[i,:] = np.sum(data*(fmm[:,i]**self.__m)[:,None],
+                                        axis=0)/norm[i]
+
+        return new_centroids
+
+    # --------------------------------------------------------------------------
+
     def compute_membership(self, data, centroids):
         """The method computes the  membership matrix  of the data  according to
         the clusters specified by the given centroids
@@ -95,6 +138,18 @@ class FuzzyKMeans(KMeans):
         fmm = sqr_dist / norm_dist
         return fmm
 
+    # --------------------------------------------------------------------------
+
+    def __converged(self,centroids, new_centroids):
+        """The method checks convergence"""
+
+        # ----------------------------------------------------------------------
+        # We compute the squarred difference between both;  indicate convergence
+        # if the total distance of the centroids is below the eps
+        # ----------------------------------------------------------------------
+        diff = (centroids - new_centroids)**2
+
+        return (np.sum(diff) <= self.__eps)
 
     # --------------------------------------------------------------------------
 
@@ -107,9 +162,8 @@ class FuzzyKMeans(KMeans):
             - sample_weight: weights of each data point
         """
         # ----------------------------------------------------------------------
-        # Number of iterations
+        # Generate a random_state and do some initializations
         # ----------------------------------------------------------------------
-        i = 1
         X = self._validate_data(
             X,
             accept_sparse="csr",
@@ -121,15 +175,33 @@ class FuzzyKMeans(KMeans):
 
         self._check_params(X)
         random_state = check_random_state(self.random_state)
+
         # ----------------------------------------------------------------------
         # Initialize the centroids
         # ----------------------------------------------------------------------
-
         centroids = self._init_centroids(X,x_squared_norms=None,init= self.init,
                                          random_state= random_state)
-        print(centroids.shape)
-        print(type(centroids))
-        # ======================================================================
+        # ----------------------------------------------------------------------
         # Do the first iteration
-        # ======================================================================
+        # ----------------------------------------------------------------------
         fmm = self.compute_membership(X, centroids)
+        new_centroids = self.__update_centroids(X, fmm)
+
+        while( not self.__converged(centroids, new_centroids)):
+            centroids = new_centroids
+            # ------------------------------------------------------------------
+            # compute the new fuzzy membership matrix, fmm; then, update the new
+            # centroids.
+            # ------------------------------------------------------------------
+            fmm = self.compute_membership(X, centroids)
+            new_centroids = self.__update_centroids(X, fmm)
+
+        # ----------------------------------------------------------------------
+        # Save the results
+        # ----------------------------------------------------------------------
+        self.cluster_centers_ = new_centroids
+        self.labels_ = fmm.argmax(axis=1)
+        self.fmm_ = fmm
+        return self
+
+    # --------------------------------------------------------------------------
