@@ -228,7 +228,7 @@ class FuzzyKMeans(KMeans):
         if not self.__is_fitted():
             raise RuntimeError("You did not fit the estimator yet.")
 
-        return self._compute_membership(X, self.cluster_centers_)
+        return self._compute_membership(data, self.cluster_centers_)
 
     # --------------------------------------------------------------------------
 
