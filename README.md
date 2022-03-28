@@ -3,12 +3,17 @@ The repository includes a modular implementation for Fuzzy K-Means based on nump
 
 ## Algorithm Dynamics
 The algorithm iteratively computes two values until convergence:
-- $C_i$ the centroid of the $i^{th}$ cluster
-- $w_{i,j}$ the degree to which a data point $x_i$ belongs to a cluster whose centroid is $C_j$;<br> note where $w_{i,j} [0,1]$,
+- ![Centroid](https://render.githubusercontent.com/render/math?math=\displaystyle\C_i) the centroid of the ith cluster
+- ![Membership weight](https://render.githubusercontent.com/render/math?math=\displaystyle\w_{i,j}) the degree to which a data point ![x_i](https://render.githubusercontent.com/render/math?math=\displaystyle\x_i) belongs to a cluster whose centroid is ![C_j](https://render.githubusercontent.com/render/math?math=\displaystyle\C_j);<br> note ![Centroid](https://render.githubusercontent.com/render/math?math=\displaystyle\w_{i,j}%20\in%20[0,1]),
 
-Given a fuzzification index, $m$, and the number of clusters, $n$, we compute the above values as below:
-- $$w_{i,j} = \frac{1}{\sum_{k=1}^{n} \left(\frac{\lVert x_i - C_j \rVert}{\lVert x_i - C_k \rVert}\right)^{\frac{2}{m-1}}} = \frac{1}{\lVert x_i - C_j \rVert^{\frac{2}{m-1}} \cdot \left(\sum_{k=1}^{n} \left(\lVert x_i - C_k \rVert\right)^{\frac{-2}{m-1}}\right)} = \boxed{\frac{\lVert x_i - C_j \rVert^{\frac{-2}{m-1}}}{ \sum_{k=1}^{n} \left(\lVert x_i - C_k \rVert\right)^{\frac{-2}{m-1}}}}$$
-- As well, the cluster centroid is just a weighted mean of all the data points, having weights equal to how much it belongs to this cluster or mathematically: $$\boxed{C_j = \frac{\sum_{i=1}^{\lvert X \rvert} w_{i,j}*x_i}{\sum_{i=1}^{\lvert X \rvert} w_{i,j}}} $$
+Given a fuzzification index, m, and the number of clusters, n, we compute the above values as below:
+![Equation for membership](https://render.githubusercontent.com/render/math?math=\displaystyle\w_{i,j}%20=%20\frac{1}{\sum_{k=1}^{n}%20\left(\frac{\lVert%20x_i%20-%20C_j%20\rVert}{\lVert%20x_i%20-%20C_k%20\rVert}\right)^{\frac{2}{m-1}}}%20=%20\frac{1}{\lVert%20x_i%20-%20C_j%20\rVert^{\frac{2}{m-1}}%20\cdot%20\left(\sum_{k=1}^{n}%20\left(\lVert%20x_i%20-%20C_k%20\rVert\right)^{\frac{-2}{m-1}}\right)}%20=%20\boxed{\frac{\lVert%20x_i%20-%20C_j%20\rVert^{\frac{-2}{m-1}}}{%20\sum_{k=1}^{n}%20\left(\lVert%20x_i%20-%20C_k%20\rVert\right)^{\frac{-2}{m-1}}}})
+
+<!--$$w_{i,j} = \frac{1}{\sum_{k=1}^{n} \left(\frac{\lVert x_i - C_j \rVert}{\lVert x_i - C_k \rVert}\right)^{\frac{2}{m-1}}} = \frac{1}{\lVert x_i - C_j \rVert^{\frac{2}{m-1}} \cdot \left(\sum_{k=1}^{n} \left(\lVert x_i - C_k \rVert\right)^{\frac{-2}{m-1}}\right)} = \boxed{\frac{\lVert x_i - C_j \rVert^{\frac{-2}{m-1}}}{ \sum_{k=1}^{n} \left(\lVert x_i - C_k \rVert\right)^{\frac{-2}{m-1}}}}$$-->
+As well, the cluster centroid is just a weighted mean of all the data points, having weights equal to how much it belongs to this cluster or mathematically: 
+
+![Equation for the centroids](https://render.githubusercontent.com/render/math?math=\displaystyle\\boxed{C_j%20=%20\frac{\sum_{i=1}^{\lvert%20X%20\rvert}%20w_{i,j}*x_i}{\sum_{i=1}^{\lvert%20X%20\rvert}%20w_{i,j}}})
+<!--$$\boxed{C_j = \frac{\sum_{i=1}^{\lvert X \rvert} w_{i,j}*x_i}{\sum_{i=1}^{\lvert X \rvert} w_{i,j}}}$$-->
 
 Therefore, we keep iterating on computing these two values until convergence.
 
