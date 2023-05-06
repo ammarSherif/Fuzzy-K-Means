@@ -215,20 +215,23 @@ class FuzzyKMeans(KMeans):
 
     # --------------------------------------------------------------------------
 
-    def compute_membership(self, data):
+    def compute_membership(self, data, centroids=None):
         """The method computes  the membership matrix  of the data  according to
         the fitted points.
 
         Inputs:
             - data: the input data points being clustered
-
+            - centroids: numpy array including the cluster centroids;
+                its shape is (n_clusters, n_features)
         Outputs:
             - fmm: fuzzy membership matrix of each data point"""
 
-        if not self.__is_fitted():
+        if centroids is not None:
+            return self._compute_membership(data, centroids)
+        elif not self.__is_fitted():
             raise RuntimeError("You did not fit the estimator yet.")
-
-        return self._compute_membership(data, self.cluster_centers_)
+        else:
+            return self._compute_membership(data, self.cluster_centers_)
 
     # --------------------------------------------------------------------------
 
