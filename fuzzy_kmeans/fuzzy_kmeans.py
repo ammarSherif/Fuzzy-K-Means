@@ -193,7 +193,9 @@ class FuzzyKMeans(KMeans):
         fmm = self._compute_membership(X, centroids)
         new_centroids = self.__update_centroids(X, fmm)
 
-        while( not self.__converged(centroids, new_centroids)):
+        itr = 0
+        while( not self.__converged(centroids, new_centroids) \
+               and itr<self.max_iter):
             centroids = new_centroids
             # ------------------------------------------------------------------
             # compute the new fuzzy membership matrix, fmm; then, update the new
@@ -201,7 +203,7 @@ class FuzzyKMeans(KMeans):
             # ------------------------------------------------------------------
             fmm = self._compute_membership(X, centroids)
             new_centroids = self.__update_centroids(X, fmm)
-
+            itr +=1
         # ----------------------------------------------------------------------
         # Save the results
         # ----------------------------------------------------------------------
